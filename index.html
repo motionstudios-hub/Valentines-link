@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Will you be my Valentine?</title>
+
+  <style>
+    :root { --cardW: min(760px, 92vw); }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 20% 10%, #ffd6e7, #ffd1dc 35%, #f7b7c8);
+      overflow: hidden;
+    }
+
+    /* Floating hearts layer */
+    .hearts {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .heart-float {
+      position: absolute;
+      bottom: -40px;
+      font-size: 20px;
+      opacity: 0.85;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.12));
+      animation: floatUp linear forwards;
+      will-change: transform, opacity;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+      10%  { opacity: 0.9; }
+      70%  { opacity: 0.9; }
+      100% { transform: translateY(-110vh) translateX(var(--drift, 0px)) scale(var(--scale, 1)); opacity: 0; }
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      width: var(--cardW);
+      background: rgba(255,255,255,0.78);
+      backdrop-filter: blur(8px);
+      border-radius: 18px;
+      padding: 28px 24px 18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.16);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .top {
+      display: grid;
+      place-items: center;
+      gap: 14px;
+      padding-top: 6px;
+    }
+
+    .kitty {
+      width: 90px;
+      height: 90px;
+      border-radius: 999px;
+      background: #f6b07a;
+      position: relative;
+    }
+    .kitty:before, .kitty:after {
+      content: "";
+      position: absolute;
+      top: 6px;
+      width: 0; height: 0;
+      border-left: 14px solid transparent;
+      border-right: 14px solid transparent;
+      border-bottom: 24px solid #e79a64;
+    }
+    .kitty:before { left: 8px; transform: rotate(-12deg); }
+    .kitty:after  { right: 8px; transform: rotate(12deg); }
+
+    .eye {
+      position: absolute;
+      top: 35px;
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      background: #111;
+    }
+    .eye.left { left: 28px; }
+    .eye.right{ right: 28px; }
+    .nose {
+      position: absolute;
+      top: 52px; left: 50%;
+      width: 10px; height: 8px;
+      transform: translateX(-50%);
+      background: #ff5b8a;
+      border-radius: 4px 4px 10px 10px;
+    }
+    .heart {
+      position: absolute;
+      right: -2px;
+      top: -2px;
+      width: 34px;
+      height: 34px;
+      background: #ff3b6b;
+      transform: rotate(45deg);
+      border-radius: 6px;
+      box-shadow: 0 10px 18px rgba(255,59,107,0.25);
+    }
+    .heart:before, .heart:after {
+      content: "";
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      background: #ff3b6b;
+      border-radius: 999px;
+    }
+    .heart:before { left: -17px; top: 0; }
+    .heart:after  { top: -17px; left: 0; }
+
+    h1 {
+      margin: 0;
+      text-align: center;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-size: clamp(28px, 4.2vw, 44px);
+      color: #121212;
+    }
+    .name { font-weight: 900; text-transform: none; }
+
+    .play {
+      margin-top: 22px;
+      position: relative;
+      height: 140px;
+    }
+
+    .btn {
+      border: 0;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 22px;
+      border-radius: 999px;
+      padding: 16px 28px;
+      box-shadow: 0 12px 26px rgba(0,0,0,0.18);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transform-origin: center;
+    }
+
+    #yesBtn {
+      background: #ff2f6f;
+      color: #fff;
+      position: absolute;
+      left: 24%;
+      top: 30%;
+      transform: translate(-50%, -50%) scale(1);
+      transition: transform 140ms ease;
+    }
+
+    #noBtn {
+      background: #e9e9ee;
+      color: #333;
+      position: absolute;
+      left: 70%;
+      top: 32%;
+      transform: translate(-50%, -50%);
+    }
+
+    .hint {
+      margin-top: 12px;
+      text-align: center;
+      color: #333;
+      opacity: 0.8;
+      font-size: 14px;
+    }
+
+    /* Result modal */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(0,0,0,0.35);
+      padding: 22px;
+      z-index: 5;
+    }
+    .modal.open { display: grid; }
+    .modal-box {
+      width: min(560px, 92vw);
+      background: white;
+      border-radius: 18px;
+      padding: 22px 18px;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.28);
+      text-align: center;
+    }
+    .modal-box h2 { margin: 10px 0 8px; }
+    .modal-box p { margin: 0 0 14px; color: #444; }
+
+    .mini {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      word-break: break-word;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #noBtn { transition: none !important; }
+      .heart-float { animation: none !important; }
+    }
+  </style>
+
+  <!-- Screenshot library (client-side) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+
+<body>
+  <div class="hearts" id="hearts"></div>
+
+  <div class="wrap">
+    <main class="card" id="card">
+      <section class="top">
+        <div class="kitty" aria-hidden="true">
+          <div class="heart"></div>
+          <div class="eye left"></div>
+          <div class="eye right"></div>
+          <div class="nose"></div>
+        </div>
+
+        <h1><span class="name" id="who">Little Bird</span> will you be my valentine?</h1>
+      </section>
+
+      <section class="play" id="arena" aria-label="Valentine buttons area">
+        <button class="btn" id="yesBtn">Yes</button>
+        <button class="btn" id="noBtn">No</button>
+      </section>
+
+      <div class="hint" id="hint">“No” seems a bit shy 😈</div>
+    </main>
+  </div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="modal-box">
+      <h2 id="mTitle">Yaaaay! 💘</h2>
+      <p id="mText">Best decision ever 😌</p>
+      <button class="btn" id="closeBtn" style="background:#111;color:#fff;font-size:16px;padding:12px 18px;">
+        Close
+      </button>
+      <div class="mini" id="status"></div>
+    </div>
+  </div>
+
+  <script>
+    // ----------------------------
+    // CONFIG
+    // ----------------------------
+
+    // 1) Default name on the page (your request)
+    const DEFAULT_NAME = "Little Bird";
+
+    // 2) (Optional) If you want to override name via URL:
+    //    ?name=Little%20Bird
+    const params = new URLSearchParams(location.search);
+    const name = (params.get("name") || DEFAULT_NAME).trim();
+
+    // 3) Webhook for "auto-send screenshot" (Make/Zapier)
+    // Put your webhook URL here once you create it.
+    const WEBHOOK_URL = ""; // e.g. "https://hook.eu1.make.com/xxxxx"
+
+    // ----------------------------
+    // UI refs
+    // ----------------------------
+    document.getElementById("who").textContent = name;
+
+    const heartsLayer = document.getElementById("hearts");
+    const arena = document.getElementById("arena");
+    const noBtn = document.getElementById("noBtn");
+    const yesBtn = document.getElementById("yesBtn");
+    const modal = document.getElementById("modal");
+    const closeBtn = document.getElementById("closeBtn");
+    const statusEl = document.getElementById("status");
+
+    // ----------------------------
+    // Floating hearts ❤️
+    // ----------------------------
+    function spawnHeart() {
+      const el = document.createElement("div");
+      el.className = "heart-float";
+      el.textContent = "❤️";
+
+      const x = Math.random() * 100; // vw
+      const size = 14 + Math.random() * 22; // px
+      const duration = 4 + Math.random() * 5; // s
+      const drift = (Math.random() * 140 - 70).toFixed(0) + "px";
+      const scale = (0.8 + Math.random() * 1.4).toFixed(2);
+
+      el.style.left = x + "vw";
+      el.style.fontSize = size + "px";
+      el.style.setProperty("--drift", drift);
+      el.style.setProperty("--scale", scale);
+      el.style.animationDuration = duration + "s";
+
+      heartsLayer.appendChild(el);
+      el.addEventListener("animationend", () => el.remove());
+    }
+
+    // spawn hearts at a steady rate
+    const heartInterval = setInterval(() => {
+      // spawn 1–2 hearts
+      spawnHeart();
+      if (Math.random() > 0.65) spawnHeart();
+    }, 450);
+
+    // ----------------------------
+    // "No" dodges + "Yes" grows
+    // ----------------------------
+    let yesScale = 1;
+    function growYes() {
+      yesScale = Math.min(2.6, yesScale + 0.12); // cap it
+      yesBtn.style.transform = `translate(-50%, -50%) scale(${yesScale})`;
+    }
+
+    function moveNoButton() {
+      const arenaRect = arena.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+
+      const padding = 10;
+      const maxX = arenaRect.width - btnRect.width - padding;
+      const maxY = arenaRect.height - btnRect.height - padding;
+
+      const x = padding + Math.random() * Math.max(0, maxX);
+      const y = padding + Math.random() * Math.max(0, maxY);
+
+      noBtn.style.left = `${x + btnRect.width / 2}px`;
+      noBtn.style.top  = `${y + btnRect.height / 2}px`;
+
+      noBtn.style.transition = "left 120ms ease, top 120ms ease, transform 120ms ease";
+      noBtn.style.transform = "translate(-50%, -50%) scale(0.98)";
+      setTimeout(() => (noBtn.style.transform = "translate(-50%, -50%) scale(1)"), 140);
+
+      // Every dodge grows the Yes button
+      growYes();
+    }
+
+    ["mouseenter", "pointerenter", "touchstart", "pointerdown"].forEach(evt => {
+      noBtn.addEventListener(evt, (e) => {
+        e.preventDefault?.();
+        moveNoButton();
+      }, { passive: false });
+    });
+
+    noBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      moveNoButton();
+    });
+
+    window.addEventListener("load", moveNoButton);
+    window.addEventListener("resize", moveNoButton);
+
+    // ----------------------------
+    // Screenshot + auto-send on YES
+    // ----------------------------
+    async function captureCardBase64() {
+      // Higher scale = sharper screenshot
+      const canvas = await html2canvas(document.getElementById("card"), {
+        backgroundColor: null,
+        scale: Math.min(2, window.devicePixelRatio || 1)
+      });
+      return canvas.toDataURL("image/png"); // base64
+    }
+
+    async function sendScreenshot(base64png) {
+      if (!WEBHOOK_URL) {
+        statusEl.textContent = "Screenshot sending is OFF (no webhook set).";
+        return;
+      }
+
+      // Keep payload simple for Make/Zapier
+      const payload = {
+        event: "valentine_yes",
+        name,
+        timestamp: new Date().toISOString(),
+        image_base64_png: base64png
+      };
+
+      const res = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error("Webhook response not OK: " + res.status);
+    }
+
+    // YES click
+    yesBtn.addEventListener("click", async () => {
+      modal.classList.add("open");
+      document.getElementById("mText").textContent = `I knew you’d say yes, ${name}! 💞`;
+      statusEl.textContent = "Saving the moment… 📸";
+
+      try {
+        const img = await captureCardBase64();
+        await sendScreenshot(img);
+        statusEl.textContent = WEBHOOK_URL
+          ? "Screenshot sent to you ✅"
+          : "Screenshot sending is OFF (add webhook to enable).";
+      } catch (err) {
+        statusEl.textContent = "Couldn’t send screenshot ❌ (check webhook).";
+        console.error(err);
+      }
+    });
+
+    closeBtn.addEventListener("click", () => modal.classList.remove("open"));
+    modal.addEventListener("click", (e) => { if (e.target === modal) modal.classList.remove("open"); });
+  </script>
+</body>
+</html>
